@@ -1,12 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/server";
-
-function generateCode(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-}
 
 function formatPhone(phone: string): string {
-  // Ensure Swedish format: convert 07X to +467X
   const cleaned = phone.replace(/\s/g, "");
   if (cleaned.startsWith("0")) return "+46" + cleaned.slice(1);
   if (cleaned.startsWith("+")) return cleaned;
@@ -19,25 +13,15 @@ export async function POST(req: NextRequest) {
     if (!phone) return NextResponse.json({ error: "Mobilnummer krävs." }, { status: 400 });
 
     const formatted = formatPhone(phone);
-    const code = generateCode();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 min
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // Store in Supabase
-    const supabase = await createAdminClient();
-    // Delete old codes for this number
-    await supabase.from("sms_verifications").delete().eq("phone", formatted);
-    await supabase.from("sms_verifications").insert({ phone: formatted, code, expires_at: expiresAt });
-
-    // Send via 46elks
     const username = process.env.ELKS_API_USERNAME;
     const password = process.env.ELKS_API_PASSWORD;
     const from = process.env.ELKS_FROM_NAME ?? "Folkradet";
 
-    if (!username || !password) {
-      // Development mode: log the code
-      console.log(`[DEV] SMS code for ${formatted}: ${code}`);
-      return NextResponse.json({ success: true, dev_code: code });
-    }
+    console.log("Username finns:", !!username);
+    console.log("Password finns:", !!password);
+    console.log("Skickar till:", formatted);
 
     const formData = new URLSearchParams({
       from,
@@ -54,15 +38,11 @@ export async function POST(req: NextRequest) {
       body: formData.toString(),
     });
 
+    const elksText = await elksRes.text();
+    console.log("46elks svar:", elksRes.status, elksText);
+
     if (!elksRes.ok) {
-      const errText = await elksRes.text();
-      console.error("46elks error:", errText);
       return NextResponse.json({ error: "Kunde inte skicka SMS. Försök igen." }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true });
-  } catch (err) {
-    console.error(err);
-    return NextResponse.json({ error: "Internt serverfel." }, { status: 500 });
-  }
-}
+    //
