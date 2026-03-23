@@ -45,4 +45,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Kunde inte skicka SMS. Försök igen." }, { status: 500 });
     }
 
-    //
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error("SMS fel:", err);
+    return NextResponse.json({ error: "Internt serverfel." }, { status: 500 });
+  }
+}
