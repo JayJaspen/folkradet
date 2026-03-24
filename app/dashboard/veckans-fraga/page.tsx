@@ -73,8 +73,8 @@ export default function VeckansFragaPage() {
       .select("profiles(gender, lan, birth_year)");
     if (!data) return;
     type ProfileRow = { gender: string; lan: string; birth_year: number };
-    const profiles = (data as { profiles: ProfileRow | null }[])
-      .map(r => r.profiles).filter(Boolean) as ProfileRow[];
+    const profiles = (data as unknown as { profiles: ProfileRow[] | ProfileRow | null }[])
+      .flatMap(r => (Array.isArray(r.profiles) ? r.profiles : r.profiles ? [r.profiles] : []));
     const curYear = new Date().getFullYear();
     const ageSet  = new Set<string>();
     profiles.forEach(p => {
