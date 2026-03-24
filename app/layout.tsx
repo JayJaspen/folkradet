@@ -4,6 +4,10 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Folkrådet – En Röst För Folket",
   description: "Få din röst hörd, transparent och konfidentiellt",
+  icons: {
+    icon: "/favicon.png",
+    apple: "/logo.png",
+  },
   openGraph: {
     title: "Folkrådet",
     description: "Få din röst hörd, transparent och konfidentiellt",
@@ -11,6 +15,7 @@ export const metadata: Metadata = {
     siteName: "Folkrådet",
     locale: "sv_SE",
     type: "website",
+    images: [{ url: "/logo.png", width: 512, height: 512 }],
   },
 };
 
