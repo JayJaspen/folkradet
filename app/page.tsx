@@ -24,9 +24,11 @@ export default function HomePage() {
     <div className="min-h-screen flex flex-col" style={{ background: "linear-gradient(135deg, #061e28 0%, #0e4a5c 50%, #061e28 100%)" }}>
       {/* Header */}
       <header className="w-full flex justify-between items-center px-6 py-4">
-        <div className="flex items-center gap-2">
-          <img src="/logo.png" alt="Folkrådet" className="h-10 w-10 rounded-full object-cover" />
-          <span className="text-white font-bold text-lg tracking-wide">Folkrådet</span>
+        <div className="flex items-center gap-3">
+          <div className="h-12 w-12 rounded-full ring-2 ring-white/60 overflow-hidden flex-shrink-0 bg-white/10">
+            <img src="/logo.png" alt="Folkrådet" className="h-full w-full object-cover" />
+          </div>
+          <span className="text-white font-bold text-xl tracking-wide">Folkrådet</span>
         </div>
         <nav className="flex gap-2">
           <Link href="/login" className="text-white/90 hover:text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-white/10 transition-colors">
@@ -43,6 +45,11 @@ export default function HomePage() {
 
       {/* Hero */}
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-20 text-center">
+        {/* Hero logo */}
+        <div className="h-28 w-28 rounded-full ring-4 ring-white/40 overflow-hidden mb-6 shadow-2xl">
+          <img src="/logo.png" alt="Folkrådet" className="h-full w-full object-cover" />
+        </div>
+
         {/* Badge */}
         <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-1.5 text-white/80 text-sm mb-8">
           <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse inline-block" />

@@ -47,9 +47,11 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-surface flex flex-col items-center justify-center p-4">
-      <Link href="/" className="flex items-center gap-2 mb-8">
-        <img src="/logo.png" alt="Folkrådet" className="h-12 w-12 rounded-full object-cover" />
-        <span className="text-primary font-bold text-lg">Folkrådet</span>
+      <Link href="/" className="flex flex-col items-center gap-3 mb-8">
+        <div className="h-20 w-20 rounded-full ring-2 ring-primary/30 overflow-hidden shadow-lg">
+          <img src="/logo.png" alt="Folkrådet" className="h-full w-full object-cover" />
+        </div>
+        <span className="text-primary font-bold text-xl">Folkrådet</span>
       </Link>
 
       <div className="card max-w-sm w-full">
