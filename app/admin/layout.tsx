@@ -46,16 +46,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="min-h-screen bg-surface flex flex-col">
-      <header className="bg-primary-dark shadow-md" style={{ background: "#001f5a" }}>
+      <header className="bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gold flex items-center justify-center">
-              <span className="text-primary font-bold text-sm">F</span>
-            </div>
-            <span className="text-white font-bold">Folkrådet</span>
-            <span className="text-white/40 text-xs ml-2 border border-white/20 px-2 py-0.5 rounded-full">Admin</span>
+          <div className="flex items-center gap-3">
+            <img src="/logo.png" alt="Folkrådet" className="h-16 w-16 object-contain" />
+            <span className="text-xs font-semibold text-primary border border-primary/30 bg-primary/5 px-2 py-0.5 rounded-full">Admin</span>
           </div>
-          <button onClick={handleLogout} className="text-white/80 hover:text-white text-sm px-3 py-1.5 border border-white/20 rounded-lg hover:bg-white/10 transition-colors">
+          <button onClick={handleLogout} className="text-gray-600 hover:text-gray-800 text-sm px-3 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
             Logga ut
           </button>
         </div>
@@ -65,7 +62,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               const active = pathname === tab.href;
               return (
                 <Link key={tab.href} href={tab.href}
-                  className={`whitespace-nowrap text-sm px-4 py-2.5 font-medium border-b-2 transition-colors ${active ? "border-gold text-gold" : "border-transparent text-white/60 hover:text-white hover:border-white/30"}`}>
+                  className={`whitespace-nowrap text-sm px-4 py-2.5 font-medium border-b-2 transition-colors ${active ? "border-primary text-primary" : "border-transparent text-gray-500 hover:text-primary hover:border-primary/30"}`}>
                   {tab.label}
                 </Link>
               );

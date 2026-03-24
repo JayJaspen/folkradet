@@ -140,7 +140,7 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen bg-surface flex flex-col items-center justify-center p-4">
       <Link href="/" className="flex flex-col items-center gap-3 mb-8">
-        <img src="/logo.png" alt="Folkrådet" className="h-28 w-28 rounded-full object-cover shadow-md" />
+        <img src="/logo.png" alt="Folkrådet" className="h-36 w-36 object-contain" />
         <span className="text-primary font-bold text-xl">Folkrådet</span>
       </Link>
 

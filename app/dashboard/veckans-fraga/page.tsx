@@ -120,6 +120,35 @@ export default function VeckansFragaPage() {
 
   useEffect(() => { fetchPartyResults(); }, [fetchPartyResults]);
 
+  // Hämta filtervärden för frågeröster (körs när frågan laddas, oberoende av filter)
+  const fetchQFilterOptions = useCallback(async () => {
+    if (!question) return;
+    const { data } = await supabase
+      .from("question_votes")
+      .select("profiles(gender, lan, birth_year)")
+      .eq("question_id", question.id);
+    if (!data) return;
+    type P = { gender: string; lan: string; birth_year: number };
+    const profiles = (data as unknown as { profiles: P[] | P | null }[])
+      .flatMap(r => (Array.isArray(r.profiles) ? r.profiles : r.profiles ? [r.profiles] : []));
+    setAvailableGendersQ([...new Set(profiles.map(p => p.gender).filter(Boolean))]);
+    setAvailableLanQ([...new Set(profiles.map(p => p.lan).filter(Boolean))].sort());
+    const curYear = new Date().getFullYear();
+    const ageSet = new Set<string>();
+    profiles.forEach(p => {
+      const age = curYear - p.birth_year;
+      if (age <= 25) ageSet.add("18–25");
+      else if (age <= 35) ageSet.add("26–35");
+      else if (age <= 45) ageSet.add("36–45");
+      else if (age <= 55) ageSet.add("46–55");
+      else if (age <= 65) ageSet.add("56–65");
+      else ageSet.add("65+");
+    });
+    setAvailableAgesQ([...ageSet]);
+  }, [question]);
+
+  useEffect(() => { fetchQFilterOptions(); }, [fetchQFilterOptions]);
+
   // Frågresultat – försöker RPC, faller tillbaka på direkt query
   const fetchQResults = useCallback(async () => {
     if (!question) return;
@@ -150,30 +179,6 @@ export default function VeckansFragaPage() {
       setQResults(Object.entries(counts).map(([option_id, { text, count }]) =>
         ({ option_id, option_text: text, vote_count: count })
       ));
-    }
-    // Uppdatera tillgängliga filtervärden för frågeröster
-    const { data: qVoters } = await supabase
-      .from("question_votes")
-      .select("profiles(gender, lan, birth_year)")
-      .eq("question_id", question.id);
-    if (qVoters) {
-      type P = { gender: string; lan: string; birth_year: number };
-      const profiles = (qVoters as unknown as { profiles: P[] | P | null }[])
-        .flatMap(r => (Array.isArray(r.profiles) ? r.profiles : r.profiles ? [r.profiles] : []));
-      setAvailableGendersQ([...new Set(profiles.map(p => p.gender).filter(Boolean))]);
-      setAvailableLanQ([...new Set(profiles.map(p => p.lan).filter(Boolean))].sort());
-      const curYear = new Date().getFullYear();
-      const ageSet  = new Set<string>();
-      profiles.forEach(p => {
-        const age = curYear - p.birth_year;
-        if (age <= 25) ageSet.add("18–25");
-        else if (age <= 35) ageSet.add("26–35");
-        else if (age <= 45) ageSet.add("36–45");
-        else if (age <= 55) ageSet.add("46–55");
-        else if (age <= 65) ageSet.add("56–65");
-        else ageSet.add("65+");
-      });
-      setAvailableAgesQ([...ageSet]);
     }
   }, [question, qFilter]);
 
