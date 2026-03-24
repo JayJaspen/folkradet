@@ -45,10 +45,8 @@ export default function HomePage() {
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-20 text-center"
         style={{ background: "linear-gradient(135deg, #0e4a5c 0%, #0891b2 50%, #0e4a5c 100%)" }}>
 
-        {/* Hero logo – stor, på ljusare bakgrund med skugga */}
-        <div className="h-36 w-36 rounded-full overflow-hidden mb-6 shadow-2xl border-4 border-white/20">
-          <img src="/logo.png" alt="Folkrådet" className="h-full w-full object-cover" />
-        </div>
+        {/* Hero logo – full logga utan klippning */}
+        <img src="/logo.png" alt="Folkrådet" className="h-52 w-52 object-contain mb-6 drop-shadow-2xl rounded-2xl" />
 
         {/* Badge */}
         <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-1.5 text-white/80 text-sm mb-8">
