@@ -24,10 +24,7 @@ export default function HomePage() {
     <div className="min-h-screen flex flex-col">
       {/* Vit header – loggan syns tydligt mot vit bakgrund */}
       <header className="w-full flex justify-between items-center px-6 py-4 bg-white shadow-sm">
-        <div className="flex items-center gap-3">
-          <img src="/logo.png" alt="Folkrådet" className="h-14 w-14 rounded-full object-cover shadow-sm" />
-          <span className="text-primary font-bold text-xl tracking-wide">Folkrådet</span>
-        </div>
+        <img src="/logo.png" alt="Folkrådet" className="h-20 w-20 object-contain" />
         <nav className="flex gap-2">
           <Link href="/login" className="text-gray-700 hover:text-primary text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors">
             Logga in
