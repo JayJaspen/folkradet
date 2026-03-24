@@ -66,29 +66,14 @@ export default function VeckansFragaPage() {
       .single().then(({ data }) => setHasVotedQuestion(!!data));
   }, [userId, question]);
 
-  // Hämta tillgängliga filtervärden för partiröster
+  // Hämta tillgängliga filtervärden för partiröster via SECURITY DEFINER-funktion
   const fetchPartyFilterOptions = useCallback(async () => {
-    const { data } = await supabase
-      .from("party_votes")
-      .select("profiles(gender, lan, birth_year)");
-    if (!data) return;
-    type ProfileRow = { gender: string; lan: string; birth_year: number };
-    const profiles = (data as unknown as { profiles: ProfileRow[] | ProfileRow | null }[])
-      .flatMap(r => (Array.isArray(r.profiles) ? r.profiles : r.profiles ? [r.profiles] : []));
-    const curYear = new Date().getFullYear();
-    const ageSet  = new Set<string>();
-    profiles.forEach(p => {
-      const age = curYear - p.birth_year;
-      if (age <= 25) ageSet.add("18–25");
-      else if (age <= 35) ageSet.add("26–35");
-      else if (age <= 45) ageSet.add("36–45");
-      else if (age <= 55) ageSet.add("46–55");
-      else if (age <= 65) ageSet.add("56–65");
-      else ageSet.add("65+");
-    });
-    setAvailableGendersParty([...new Set(profiles.map(p => p.gender).filter(Boolean))]);
-    setAvailableLanParty([...new Set(profiles.map(p => p.lan).filter(Boolean))].sort());
-    setAvailableAgesParty([...ageSet]);
+    const { data, error } = await supabase.rpc("get_party_filter_options");
+    if (error || !data) return;
+    const d = data as { genders: string[]; lans: string[]; age_groups: string[] };
+    setAvailableGendersParty(d.genders ?? []);
+    setAvailableLanParty(d.lans ?? []);
+    setAvailableAgesParty(d.age_groups ?? []);
   }, []);
 
   useEffect(() => { fetchPartyFilterOptions(); }, [fetchPartyFilterOptions]);
@@ -120,31 +105,15 @@ export default function VeckansFragaPage() {
 
   useEffect(() => { fetchPartyResults(); }, [fetchPartyResults]);
 
-  // Hämta filtervärden för frågeröster (körs när frågan laddas, oberoende av filter)
+  // Hämta filtervärden för frågeröster via SECURITY DEFINER-funktion
   const fetchQFilterOptions = useCallback(async () => {
     if (!question) return;
-    const { data } = await supabase
-      .from("question_votes")
-      .select("profiles(gender, lan, birth_year)")
-      .eq("question_id", question.id);
-    if (!data) return;
-    type P = { gender: string; lan: string; birth_year: number };
-    const profiles = (data as unknown as { profiles: P[] | P | null }[])
-      .flatMap(r => (Array.isArray(r.profiles) ? r.profiles : r.profiles ? [r.profiles] : []));
-    setAvailableGendersQ([...new Set(profiles.map(p => p.gender).filter(Boolean))]);
-    setAvailableLanQ([...new Set(profiles.map(p => p.lan).filter(Boolean))].sort());
-    const curYear = new Date().getFullYear();
-    const ageSet = new Set<string>();
-    profiles.forEach(p => {
-      const age = curYear - p.birth_year;
-      if (age <= 25) ageSet.add("18–25");
-      else if (age <= 35) ageSet.add("26–35");
-      else if (age <= 45) ageSet.add("36–45");
-      else if (age <= 55) ageSet.add("46–55");
-      else if (age <= 65) ageSet.add("56–65");
-      else ageSet.add("65+");
-    });
-    setAvailableAgesQ([...ageSet]);
+    const { data, error } = await supabase.rpc("get_question_filter_options", { p_question_id: question.id });
+    if (error || !data) return;
+    const d = data as { genders: string[]; lans: string[]; age_groups: string[] };
+    setAvailableGendersQ(d.genders ?? []);
+    setAvailableLanQ(d.lans ?? []);
+    setAvailableAgesQ(d.age_groups ?? []);
   }, [question]);
 
   useEffect(() => { fetchQFilterOptions(); }, [fetchQFilterOptions]);
