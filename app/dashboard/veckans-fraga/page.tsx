@@ -137,11 +137,14 @@ export default function VeckansFragaPage() {
       .select("option_id, question_options(option_text)")
       .eq("question_id", question.id);
     if (raw) {
-      type RawVote = { option_id: string; question_options: { option_text: string } | null };
+      type RawVote = { option_id: string; question_options: { option_text: string }[] | { option_text: string } | null };
       const counts: Record<string, { text: string; count: number }> = {};
-      (raw as RawVote[]).forEach(v => {
+      (raw as unknown as RawVote[]).forEach(v => {
+        const optText = Array.isArray(v.question_options)
+          ? (v.question_options[0]?.option_text ?? v.option_id)
+          : (v.question_options?.option_text ?? v.option_id);
         if (!counts[v.option_id])
-          counts[v.option_id] = { text: v.question_options?.option_text ?? v.option_id, count: 0 };
+          counts[v.option_id] = { text: optText, count: 0 };
         counts[v.option_id].count++;
       });
       setQResults(Object.entries(counts).map(([option_id, { text, count }]) =>
