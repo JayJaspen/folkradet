@@ -211,9 +211,27 @@ export default function VeckansFragaPage() {
     setSubmittingParty(false);
   }
 
+  // Schemainfo för veckans fråga
+  function getScheduleInfo(): { type: "thursday"; message: string } | { type: "active"; message: string; detail: string } {
+    const day = new Date().getDay(); // 0=Sön, 1=Mån, 2=Tis, 3=Ons, 4=Tor, 5=Fre, 6=Lör
+    if (day === 4) {
+      return { type: "thursday", message: "Imorgon publiceras en ny fråga!" };
+    }
+    const daysUntilWed = (3 - day + 7) % 7 || 7;
+    const deadline = new Date();
+    deadline.setDate(deadline.getDate() + daysUntilWed);
+    const deadlineStr = deadline.toLocaleDateString("sv-SE", { weekday: "long", day: "numeric", month: "long" });
+    const detail = daysUntilWed === 0 ? "Sista chansen – frågan stänger idag!" : `Sista svarsdagen: ${deadlineStr}`;
+    return { type: "active", message: "Aktiv i 5 dagar · Ny fråga publiceras varje fredag", detail };
+  }
+  const scheduleInfo = getScheduleInfo();
+
   return (
     <div className="grid grid-cols-[160px_1fr_1fr_160px] gap-4 items-start">
-      <div className="sticky top-4"><BannerAd position="left" /></div>
+      <div className="sticky top-4 flex flex-col gap-4">
+        <BannerAd position="left" />
+        <BannerAd position="left-2" />
+      </div>
 
       {/* Veckans fråga */}
       <div className="card">
@@ -221,6 +239,18 @@ export default function VeckansFragaPage() {
           <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">Veckans fråga</span>
           {question && <span className="text-xs text-gray-400">Vecka {question.week_number}, {question.year}</span>}
         </div>
+
+        {/* Schemainfo */}
+        {scheduleInfo.type === "thursday" ? (
+          <div className="mt-2 mb-3 bg-amber-50 border border-amber-200 text-amber-800 text-xs px-3 py-2 rounded-lg flex items-center gap-2">
+            🔔 <span className="font-medium">{scheduleInfo.message}</span>
+          </div>
+        ) : (
+          <div className="mt-2 mb-3 bg-primary/5 border border-primary/20 text-primary text-xs px-3 py-2 rounded-lg flex items-center gap-2">
+            🗓️ <span>{scheduleInfo.message} · <strong>{scheduleInfo.detail}</strong></span>
+          </div>
+        )}
+
         {!question ? (
           <p className="text-gray-400 mt-4">Ingen aktiv fråga just nu. Kom tillbaka snart!</p>
         ) : (
@@ -298,7 +328,10 @@ export default function VeckansFragaPage() {
         </div>
       </div>
 
-      <div className="sticky top-4"><BannerAd position="right" /></div>
+      <div className="sticky top-4 flex flex-col gap-4">
+        <BannerAd position="right" />
+        <BannerAd position="right-2" />
+      </div>
     </div>
   );
 }

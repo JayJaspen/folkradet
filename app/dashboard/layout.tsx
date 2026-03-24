@@ -40,18 +40,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen bg-surface flex flex-col">
-      {/* Top bar */}
-      <header className="bg-primary shadow-md">
+      {/* Top bar – vit bakgrund så den mörka loggan syns tydligt */}
+      <header className="bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link href="/dashboard/veckans-fraga" className="flex items-center gap-2">
-            <div className="h-12 w-12 rounded-full ring-2 ring-white/60 overflow-hidden flex-shrink-0 bg-white/10">
-              <img src="/logo.png" alt="Folkrådet" className="h-full w-full object-cover" />
-            </div>
-            <span className="text-white font-bold text-base">Folkrådet</span>
+          <Link href="/dashboard/veckans-fraga" className="flex items-center gap-3">
+            <img src="/logo.png" alt="Folkrådet" className="h-14 w-14 rounded-full object-cover shadow-sm" />
+            <span className="text-primary font-bold text-lg">Folkrådet</span>
           </Link>
           <div className="flex items-center gap-3">
-            {username && <span className="text-white/70 text-sm hidden sm:block">@{username}</span>}
-            <button onClick={handleLogout} className="text-white/80 hover:text-white text-sm px-3 py-1.5 border border-white/20 rounded-lg hover:bg-white/10 transition-colors">
+            {username && <span className="text-gray-500 text-sm hidden sm:block">@{username}</span>}
+            <button onClick={handleLogout} className="text-gray-600 hover:text-gray-800 text-sm px-3 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
               Logga ut
             </button>
           </div>
@@ -65,7 +63,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <Link
                   key={tab.href}
                   href={tab.href}
-                  className={`whitespace-nowrap text-sm px-4 py-2.5 font-medium border-b-2 transition-colors ${active ? "border-gold text-gold" : "border-transparent text-white/60 hover:text-white hover:border-white/30"}`}
+                  className={`whitespace-nowrap text-sm px-4 py-2.5 font-medium border-b-2 transition-colors ${active ? "border-primary text-primary" : "border-transparent text-gray-500 hover:text-primary hover:border-primary/30"}`}
                 >
                   {tab.label}
                 </Link>

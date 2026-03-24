@@ -21,32 +21,32 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "linear-gradient(135deg, #061e28 0%, #0e4a5c 50%, #061e28 100%)" }}>
-      {/* Header */}
-      <header className="w-full flex justify-between items-center px-6 py-4">
+    <div className="min-h-screen flex flex-col">
+      {/* Vit header – loggan syns tydligt mot vit bakgrund */}
+      <header className="w-full flex justify-between items-center px-6 py-4 bg-white shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="h-12 w-12 rounded-full ring-2 ring-white/60 overflow-hidden flex-shrink-0 bg-white/10">
-            <img src="/logo.png" alt="Folkrådet" className="h-full w-full object-cover" />
-          </div>
-          <span className="text-white font-bold text-xl tracking-wide">Folkrådet</span>
+          <img src="/logo.png" alt="Folkrådet" className="h-14 w-14 rounded-full object-cover shadow-sm" />
+          <span className="text-primary font-bold text-xl tracking-wide">Folkrådet</span>
         </div>
         <nav className="flex gap-2">
-          <Link href="/login" className="text-white/90 hover:text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-white/10 transition-colors">
+          <Link href="/login" className="text-gray-700 hover:text-primary text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors">
             Logga in
           </Link>
-          <Link href="/register" className="bg-gold text-primary font-semibold text-sm px-4 py-2 rounded-lg hover:bg-yellow-300 transition-colors">
+          <Link href="/register" className="bg-primary text-white font-semibold text-sm px-4 py-2 rounded-lg hover:bg-primary-light transition-colors">
             Registrera
           </Link>
-          <Link href="/contact" className="text-white/90 hover:text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-white/10 transition-colors">
+          <Link href="/contact" className="text-gray-700 hover:text-primary text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors">
             Kontakta oss
           </Link>
         </nav>
       </header>
 
-      {/* Hero */}
-      <main className="flex-1 flex flex-col items-center justify-center px-4 py-20 text-center">
-        {/* Hero logo */}
-        <div className="h-28 w-28 rounded-full ring-4 ring-white/40 overflow-hidden mb-6 shadow-2xl">
+      {/* Hero – mörk gradient med loggan stor och tydlig */}
+      <main className="flex-1 flex flex-col items-center justify-center px-4 py-20 text-center"
+        style={{ background: "linear-gradient(135deg, #0e4a5c 0%, #0891b2 50%, #0e4a5c 100%)" }}>
+
+        {/* Hero logo – stor, på ljusare bakgrund med skugga */}
+        <div className="h-36 w-36 rounded-full overflow-hidden mb-6 shadow-2xl border-4 border-white/20">
           <img src="/logo.png" alt="Folkrådet" className="h-full w-full object-cover" />
         </div>
 
@@ -64,7 +64,7 @@ export default function HomePage() {
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-          <Link href="/register" className="bg-gold text-primary font-bold px-8 py-3.5 rounded-xl text-base hover:bg-yellow-300 transition-colors shadow-lg shadow-gold/20">
+          <Link href="/register" className="bg-gold text-primary-dark font-bold px-8 py-3.5 rounded-xl text-base hover:bg-gold-dark transition-colors shadow-lg">
             Registrera dig gratis
           </Link>
           <Link href="/login" className="bg-white/10 border border-white/20 text-white font-semibold px-8 py-3.5 rounded-xl text-base hover:bg-white/20 transition-colors">
@@ -97,9 +97,9 @@ export default function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="text-center text-white/40 text-xs py-6 px-4">
+      <footer className="text-center text-gray-400 text-xs py-6 px-4 bg-white border-t border-gray-100">
         © {new Date().getFullYear()} Folkrådet. Kontakt:{" "}
-        <a href="mailto:info@folkradet.se" className="hover:text-white/70 underline">
+        <a href="mailto:info@folkradet.se" className="hover:text-gray-600 underline">
           info@folkradet.se
         </a>
       </footer>

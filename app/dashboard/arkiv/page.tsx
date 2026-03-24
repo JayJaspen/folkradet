@@ -19,6 +19,11 @@ export default function ArkivPage() {
   const [results, setResults] = useState<VoteResult[]>([]);
   const chartRef = useRef<HTMLDivElement>(null);
 
+  // Tillgängliga filtervärden
+  const [availableGenders, setAvailableGenders] = useState<string[]>([]);
+  const [availableLan,     setAvailableLan]     = useState<string[]>([]);
+  const [availableAges,    setAvailableAges]    = useState<string[]>([]);
+
   useEffect(() => {
     supabase
       .from("weekly_questions")
@@ -30,15 +35,64 @@ export default function ArkivPage() {
       });
   }, []);
 
+  // Hämta filtervärden baserat på vald fråga
+  const fetchFilterOptions = useCallback(async () => {
+    if (!selectedQ) return;
+    const { data } = await supabase
+      .from("question_votes")
+      .select("profiles(gender, lan, birth_year)")
+      .eq("question_id", selectedQ.id);
+    if (!data) return;
+    type P = { gender: string; lan: string; birth_year: number };
+    const profiles = (data as unknown as { profiles: P[] | P | null }[])
+      .flatMap(r => Array.isArray(r.profiles) ? r.profiles : r.profiles ? [r.profiles] : []);
+    setAvailableGenders([...new Set(profiles.map(p => p.gender).filter(Boolean))]);
+    setAvailableLan([...new Set(profiles.map(p => p.lan).filter(Boolean))].sort());
+    const curYear = new Date().getFullYear();
+    const ageSet = new Set<string>();
+    profiles.forEach(p => {
+      const age = curYear - p.birth_year;
+      if (age <= 25) ageSet.add("18–25");
+      else if (age <= 35) ageSet.add("26–35");
+      else if (age <= 45) ageSet.add("36–45");
+      else if (age <= 55) ageSet.add("46–55");
+      else if (age <= 65) ageSet.add("56–65");
+      else ageSet.add("65+");
+    });
+    setAvailableAges([...ageSet]);
+  }, [selectedQ]);
+
+  useEffect(() => { fetchFilterOptions(); }, [fetchFilterOptions]);
+
   const fetchResults = useCallback(async () => {
     if (!selectedQ) return;
-    const { data } = await supabase.rpc("get_question_results", {
+    const { data, error } = await supabase.rpc("get_question_results", {
       p_question_id: selectedQ.id,
       p_age_group: filter.ageGroup || null,
       p_gender: filter.gender || null,
       p_lan: filter.lan || null,
     });
-    setResults(data ?? []);
+    if (!error) { setResults(data ?? []); return; }
+
+    // Fallback
+    const { data: raw } = await supabase
+      .from("question_votes")
+      .select("option_id, question_options(option_text)")
+      .eq("question_id", selectedQ.id);
+    if (raw) {
+      type RawVote = { option_id: string; question_options: { option_text: string }[] | { option_text: string } | null };
+      const counts: Record<string, { text: string; count: number }> = {};
+      (raw as unknown as RawVote[]).forEach(v => {
+        const optText = Array.isArray(v.question_options)
+          ? (v.question_options[0]?.option_text ?? v.option_id)
+          : (v.question_options?.option_text ?? v.option_id);
+        if (!counts[v.option_id]) counts[v.option_id] = { text: optText, count: 0 };
+        counts[v.option_id].count++;
+      });
+      setResults(Object.entries(counts).map(([option_id, { text, count }]) =>
+        ({ option_id, option_text: text, vote_count: count })
+      ));
+    }
   }, [selectedQ, filter]);
 
   useEffect(() => { fetchResults(); }, [fetchResults]);
@@ -51,7 +105,7 @@ export default function ArkivPage() {
     const imgData = canvas.toDataURL("image/png");
     const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
     const date = new Date().toLocaleDateString("sv-SE");
-    pdf.setFontSize(16); pdf.setTextColor(0, 48, 135);
+    pdf.setFontSize(16); pdf.setTextColor(8, 145, 178);
     pdf.text("Folkrådet – Arkiv", 14, 18);
     pdf.setFontSize(11); pdf.setTextColor(40, 40, 40);
     pdf.text(selectedQ.title, 14, 26);
@@ -65,7 +119,10 @@ export default function ArkivPage() {
 
   return (
     <div className="grid grid-cols-[160px_1fr_160px] gap-4 items-start">
-      <div className="sticky top-4"><BannerAd position="left" /></div>
+      <div className="sticky top-4 flex flex-col gap-4">
+        <BannerAd position="left" />
+        <BannerAd position="left-2" />
+      </div>
 
       <div className="space-y-4">
         <div className="card">
@@ -104,7 +161,13 @@ export default function ArkivPage() {
 
               <div className="mb-4">
                 <p className="text-xs text-gray-500 mb-2 font-medium">Filtrera:</p>
-                <ResultFilter value={filter} onChange={setFilter} />
+                <ResultFilter
+                  value={filter}
+                  onChange={setFilter}
+                  availableAgeGroups={availableAges.length > 0 ? availableAges : undefined}
+                  availableGenders={availableGenders.length > 0 ? availableGenders : undefined}
+                  availableLan={availableLan.length > 0 ? availableLan : undefined}
+                />
               </div>
 
               <div ref={chartRef} className="bg-white rounded-xl p-4">
@@ -118,7 +181,10 @@ export default function ArkivPage() {
         </div>
       </div>
 
-      <div className="sticky top-4"><BannerAd position="right" /></div>
+      <div className="sticky top-4 flex flex-col gap-4">
+        <BannerAd position="right" />
+        <BannerAd position="right-2" />
+      </div>
     </div>
   );
 }

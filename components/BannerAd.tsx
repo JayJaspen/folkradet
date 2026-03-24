@@ -10,8 +10,10 @@ interface Banner {
   name: string;
 }
 
+export type BannerPosition = "left" | "right" | "left-2" | "right-2";
+
 interface Props {
-  position: "left" | "right";
+  position: BannerPosition;
 }
 
 export default function BannerAd({ position }: Props) {

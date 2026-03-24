@@ -1,7 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { AGE_GROUPS, GENDER_OPTIONS, LAN } from "@/lib/constants";
+import { AGE_GROUPS, GENDER_OPTIONS } from "@/lib/constants";
 import { formatDate, formatDateTime } from "@/lib/utils";
 
 interface Profile {
@@ -22,6 +22,34 @@ export default function AdminAnvandare() {
   const [filterGender, setFilterGender] = useState("");
   const [filterAge, setFilterAge] = useState("");
   const [filterLan, setFilterLan] = useState("");
+
+  // Bara visa filtervärden som faktiskt finns
+  const [availableGenders, setAvailableGenders] = useState<string[]>([]);
+  const [availableLan,     setAvailableLan]     = useState<string[]>([]);
+  const [availableAges,    setAvailableAges]    = useState<string[]>([]);
+
+  useEffect(() => {
+    async function fetchFilterOptions() {
+      const { data } = await supabase
+        .from("profiles")
+        .select("gender, lan, birth_year");
+      if (!data) return;
+      setAvailableGenders([...new Set(data.map(p => p.gender).filter(Boolean))]);
+      setAvailableLan([...new Set(data.map(p => p.lan).filter(Boolean))].sort() as string[]);
+      const curYear = new Date().getFullYear();
+      const ageSet = new Set<string>();
+      data.forEach(p => {
+        if (!p.birth_year) return;
+        const age = curYear - p.birth_year;
+        const group = AGE_GROUPS.find(g => age >= g.min && age <= g.max);
+        if (group) ageSet.add(group.label);
+      });
+      // Sortera åldersgrupperna i rätt ordning
+      const sorted = AGE_GROUPS.map(g => g.label).filter(l => ageSet.has(l));
+      setAvailableAges(sorted);
+    }
+    fetchFilterOptions();
+  }, []);
 
   async function doSearch() {
     setLoading(true);
@@ -73,21 +101,25 @@ export default function AdminAnvandare() {
             <label className="label">Kön</label>
             <select className="input" value={filterGender} onChange={e => setFilterGender(e.target.value)}>
               <option value="">Alla kön</option>
-              {GENDER_OPTIONS.map(g => <option key={g.value} value={g.value}>{g.label}</option>)}
+              {availableGenders.map(g => (
+                <option key={g} value={g}>
+                  {GENDER_OPTIONS.find(o => o.value === g)?.label ?? g}
+                </option>
+              ))}
             </select>
           </div>
           <div>
             <label className="label">Åldersgrupp</label>
             <select className="input" value={filterAge} onChange={e => setFilterAge(e.target.value)}>
               <option value="">Alla åldrar</option>
-              {AGE_GROUPS.map(g => <option key={g.label} value={g.label}>{g.label} år</option>)}
+              {availableAges.map(g => <option key={g} value={g}>{g} år</option>)}
             </select>
           </div>
           <div>
             <label className="label">Län</label>
             <select className="input" value={filterLan} onChange={e => setFilterLan(e.target.value)}>
               <option value="">Alla län</option>
-              {LAN.map(l => <option key={l} value={l}>{l}</option>)}
+              {availableLan.map(l => <option key={l} value={l}>{l}</option>)}
             </select>
           </div>
         </div>
@@ -161,7 +193,7 @@ export default function AdminAnvandare() {
                 </tbody>
               </table>
               {profiles.length === 100 && (
-                <p className="text-xs text-gray-400 mt-2 text-center">Visar max 100 resultat. Förfina din sökning för mer specifika resultat.</p>
+                <p className="text-xs text-gray-400 mt-2 text-center">Visar max 100 resultat. Förfina din sökning.</p>
               )}
             </div>
           )}

@@ -108,7 +108,10 @@ export default function ValjarbarometerPage() {
 
   return (
     <div className="grid grid-cols-[160px_1fr_160px] gap-4 items-start">
-      <div className="sticky top-4"><BannerAd position="left" /></div>
+      <div className="sticky top-4 flex flex-col gap-4">
+        <BannerAd position="left" />
+        <BannerAd position="left-2" />
+      </div>
 
       <div className="card">
         <div className="flex items-start justify-between mb-4 flex-wrap gap-2">
@@ -169,7 +172,10 @@ export default function ValjarbarometerPage() {
         )}
       </div>
 
-      <div className="sticky top-4"><BannerAd position="right" /></div>
+      <div className="sticky top-4 flex flex-col gap-4">
+        <BannerAd position="right" />
+        <BannerAd position="right-2" />
+      </div>
     </div>
   );
 }

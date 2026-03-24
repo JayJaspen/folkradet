@@ -28,6 +28,11 @@ export default function AdminStatistikPage() {
   const [totalVotes, setTotalVotes] = useState(0);
   const chartRef = useRef<HTMLDivElement>(null);
 
+  // Tillgängliga filtervärden för vald fråga
+  const [availableGenders, setAvailableGenders] = useState<string[]>([]);
+  const [availableLan,     setAvailableLan]     = useState<string[]>([]);
+  const [availableAges,    setAvailableAges]    = useState<string[]>([]);
+
   useEffect(() => {
     supabase.from("weekly_questions").select("id, title, published_at, week_number, year").order("published_at", { ascending: false })
       .then(({ data }) => {
@@ -36,17 +41,69 @@ export default function AdminStatistikPage() {
       });
   }, []);
 
+  // Hämta filtervärden för vald fråga
+  const fetchFilterOptions = useCallback(async () => {
+    if (!selectedQ) return;
+    const { data } = await supabase
+      .from("question_votes")
+      .select("profiles(gender, lan, birth_year)")
+      .eq("question_id", selectedQ.id);
+    if (!data) return;
+    type P = { gender: string; lan: string; birth_year: number };
+    const profiles = (data as unknown as { profiles: P[] | P | null }[])
+      .flatMap(r => Array.isArray(r.profiles) ? r.profiles : r.profiles ? [r.profiles] : []);
+    setAvailableGenders([...new Set(profiles.map(p => p.gender).filter(Boolean))]);
+    setAvailableLan([...new Set(profiles.map(p => p.lan).filter(Boolean))].sort());
+    const curYear = new Date().getFullYear();
+    const ageSet = new Set<string>();
+    profiles.forEach(p => {
+      const age = curYear - p.birth_year;
+      if (age <= 25) ageSet.add("18–25");
+      else if (age <= 35) ageSet.add("26–35");
+      else if (age <= 45) ageSet.add("36–45");
+      else if (age <= 55) ageSet.add("46–55");
+      else if (age <= 65) ageSet.add("56–65");
+      else ageSet.add("65+");
+    });
+    setAvailableAges([...ageSet]);
+  }, [selectedQ]);
+
+  useEffect(() => { fetchFilterOptions(); }, [fetchFilterOptions]);
+
   const fetchResults = useCallback(async () => {
     if (!selectedQ) return;
-    const { data } = await supabase.rpc("get_question_results", {
+    const { data, error } = await supabase.rpc("get_question_results", {
       p_question_id: selectedQ.id,
       p_age_group: filter.ageGroup || null,
       p_gender: filter.gender || null,
       p_lan: filter.lan || null,
     });
-    const res = data ?? [];
-    setResults(res);
-    setTotalVotes(res.reduce((s: number, r: VoteResult) => s + Number(r.vote_count), 0));
+    if (!error) {
+      const res = data ?? [];
+      setResults(res);
+      setTotalVotes(res.reduce((s: number, r: VoteResult) => s + Number(r.vote_count), 0));
+      return;
+    }
+    // Fallback
+    const { data: raw } = await supabase
+      .from("question_votes")
+      .select("option_id, question_options(option_text)")
+      .eq("question_id", selectedQ.id);
+    if (raw) {
+      type RawVote = { option_id: string; question_options: { option_text: string }[] | { option_text: string } | null };
+      const counts: Record<string, { text: string; count: number }> = {};
+      (raw as unknown as RawVote[]).forEach(v => {
+        const optText = Array.isArray(v.question_options)
+          ? (v.question_options[0]?.option_text ?? v.option_id)
+          : (v.question_options?.option_text ?? v.option_id);
+        if (!counts[v.option_id]) counts[v.option_id] = { text: optText, count: 0 };
+        counts[v.option_id].count++;
+      });
+      const res = Object.entries(counts).map(([option_id, { text, count }]) =>
+        ({ option_id, option_text: text, vote_count: count }));
+      setResults(res);
+      setTotalVotes(res.reduce((s, r) => s + r.vote_count, 0));
+    }
   }, [selectedQ, filter]);
 
   useEffect(() => { fetchResults(); }, [fetchResults]);
@@ -59,7 +116,7 @@ export default function AdminStatistikPage() {
     const imgData = canvas.toDataURL("image/png");
     const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
     const date = new Date().toLocaleDateString("sv-SE");
-    pdf.setFontSize(16); pdf.setTextColor(0, 48, 135);
+    pdf.setFontSize(16); pdf.setTextColor(8, 145, 178);
     pdf.text("Folkrådet – Admin Statistik", 14, 18);
     pdf.setFontSize(11); pdf.setTextColor(40, 40, 40);
     pdf.text(selectedQ.title, 14, 27);
@@ -112,8 +169,14 @@ export default function AdminStatistikPage() {
             </div>
 
             <div className="mb-4 p-3 bg-surface rounded-xl">
-              <p className="text-xs text-gray-500 mb-2 font-medium">Filtrera:</p>
-              <ResultFilter value={filter} onChange={setFilter} />
+              <p className="text-xs text-gray-500 mb-2 font-medium">Filtrera (visar bara alternativ med data):</p>
+              <ResultFilter
+                value={filter}
+                onChange={setFilter}
+                availableAgeGroups={availableAges.length > 0 ? availableAges : undefined}
+                availableGenders={availableGenders.length > 0 ? availableGenders : undefined}
+                availableLan={availableLan.length > 0 ? availableLan : undefined}
+              />
             </div>
 
             <div ref={chartRef} className="bg-white rounded-xl p-4">
@@ -124,7 +187,6 @@ export default function AdminStatistikPage() {
               />
             </div>
 
-            {/* Tabell */}
             {results.length > 0 && (
               <table className="w-full text-sm mt-4">
                 <thead>
