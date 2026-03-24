@@ -10,15 +10,15 @@ const config: Config = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: "#003087",
-          light: "#1a4aad",
-          dark: "#001f5a",
+          DEFAULT: "#0e4a5c",
+          light: "#1a7080",
+          dark: "#061e28",
         },
         gold: {
-          DEFAULT: "#FECC00",
-          dark: "#d4a900",
+          DEFAULT: "#5aa860",
+          dark: "#3d8a43",
         },
-        surface: "#F4F6FB",
+        surface: "#f0f4f6",
       },
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],

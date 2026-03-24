@@ -21,13 +21,11 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "linear-gradient(135deg, #003087 0%, #1a4aad 50%, #003087 100%)" }}>
+    <div className="min-h-screen flex flex-col" style={{ background: "linear-gradient(135deg, #061e28 0%, #0e4a5c 50%, #061e28 100%)" }}>
       {/* Header */}
       <header className="w-full flex justify-between items-center px-6 py-4">
         <div className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-full bg-gold flex items-center justify-center">
-            <span className="text-primary font-bold text-sm">F</span>
-          </div>
+          <img src="/logo.png" alt="Folkrådet" className="h-10 w-10 rounded-full object-cover" />
           <span className="text-white font-bold text-lg tracking-wide">Folkrådet</span>
         </div>
         <nav className="flex gap-2">
