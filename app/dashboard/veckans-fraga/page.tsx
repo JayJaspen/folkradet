@@ -155,8 +155,8 @@ export default function VeckansFragaPage() {
       .eq("question_id", question.id);
     if (qVoters) {
       type P = { gender: string; lan: string; birth_year: number };
-      const profiles = (qVoters as { profiles: P | null }[])
-        .map(r => r.profiles).filter(Boolean) as P[];
+      const profiles = (qVoters as unknown as { profiles: P[] | P | null }[])
+        .flatMap(r => (Array.isArray(r.profiles) ? r.profiles : r.profiles ? [r.profiles] : []));
       setAvailableGendersQ([...new Set(profiles.map(p => p.gender).filter(Boolean))]);
       setAvailableLanQ([...new Set(profiles.map(p => p.lan).filter(Boolean))].sort());
       const curYear = new Date().getFullYear();
