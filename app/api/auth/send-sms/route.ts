@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createAdminClient } from "@/lib/supabase/server";
 
 function formatPhone(phone: string): string {
   const cleaned = phone.replace(/\s/g, "");
@@ -43,6 +44,22 @@ export async function POST(req: NextRequest) {
 
     if (!elksRes.ok) {
       return NextResponse.json({ error: "Kunde inte skicka SMS. Försök igen." }, { status: 500 });
+    }
+
+    // Spara koden i databasen så att verify-sms kan validera den
+    const supabase = await createAdminClient();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 minuter
+
+    const { error: dbError } = await supabase
+      .from("sms_verifications")
+      .upsert(
+        { phone: formatted, code, expires_at: expiresAt, used: false },
+        { onConflict: "phone" }
+      );
+
+    if (dbError) {
+      console.error("Kunde inte spara verifieringskod:", dbError);
+      return NextResponse.json({ error: "Internt serverfel vid sparande av kod." }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
