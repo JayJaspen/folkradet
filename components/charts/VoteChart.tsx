@@ -2,7 +2,7 @@
 import { useState } from "react";
 import {
   PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
-  BarChart, Bar, XAxis, YAxis, CartesianGrid,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, LabelList,
 } from "recharts";
 
 interface DataPoint {
@@ -65,17 +65,17 @@ export default function VoteChart({ data, title, showToggle = true, defaultType 
         </div>
       ) : (
         <>
-          <ResponsiveContainer width="100%" height={260}>
+          <ResponsiveContainer width="100%" height={280}>
             {chartType === "pie" ? (
-              <PieChart>
+              <PieChart margin={{ top: 20, right: 20, bottom: 0, left: 20 }}>
                 <Pie
                   data={enriched}
                   cx="50%"
-                  cy="50%"
-                  outerRadius={90}
+                  cy="55%"
+                  outerRadius={80}
                   dataKey="value"
                   label={({ name, pct }) => `${name}: ${pct}%`}
-                  labelLine={false}
+                  labelLine={true}
                 >
                   {enriched.map((entry, index) => (
                     <Cell key={index} fill={entry.color} />
@@ -85,15 +85,16 @@ export default function VoteChart({ data, title, showToggle = true, defaultType 
                 <Legend />
               </PieChart>
             ) : (
-              <BarChart data={enriched} margin={{ top: 5, right: 20, left: 0, bottom: 60 }}>
+              <BarChart data={enriched} margin={{ top: 24, right: 20, left: 0, bottom: 60 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} angle={-20} textAnchor="end" interval={0} />
                 <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip formatter={(v: number) => [`${v} röster`, "Antal"]} />
+                <Tooltip formatter={(v: number, _name: string, props: { payload?: { pct?: number } }) => [`${v} röster (${props.payload?.pct ?? 0}%)`, "Röster"]} />
                 <Bar dataKey="value" radius={[4, 4, 0, 0]}>
                   {enriched.map((entry, index) => (
                     <Cell key={index} fill={entry.color} />
                   ))}
+                  <LabelList dataKey="pct" position="top" fontSize={11} formatter={(v: number) => `${v}%`} />
                 </Bar>
               </BarChart>
             )}
