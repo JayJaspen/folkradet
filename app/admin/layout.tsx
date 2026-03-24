@@ -49,7 +49,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <header className="bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-0 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="Folkrådet" className="h-16 w-16 object-contain" />
+            <img src="/logo-header.png" alt="Folkrådet" className="h-16 w-auto object-contain" />
             <span className="text-xs font-semibold text-primary border border-primary/30 bg-primary/5 px-2 py-0.5 rounded-full">Admin</span>
           </div>
           <button onClick={handleLogout} className="text-gray-600 hover:text-gray-800 text-sm px-3 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">

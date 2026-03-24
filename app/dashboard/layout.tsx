@@ -44,7 +44,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <header className="bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-0 flex items-center justify-between">
           <Link href="/dashboard/veckans-fraga">
-            <img src="/logo.png" alt="Folkrådet" className="h-16 w-16 object-contain" />
+            <img src="/logo-header.png" alt="Folkrådet" className="h-16 w-auto object-contain" />
           </Link>
           <div className="flex items-center gap-3">
             {username && <span className="text-gray-500 text-sm hidden sm:block">@{username}</span>}
