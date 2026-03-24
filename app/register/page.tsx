@@ -97,20 +97,24 @@ export default function RegisterPage() {
       if (authError) throw new Error(authError.message);
       if (!authData.user) throw new Error("Registrering misslyckades.");
 
-      // Create profile
-      const { error: profileError } = await supabase.from("profiles").insert({
-        id: authData.user.id,
-        username: form.username,
-        first_name: form.firstName,
-        last_name: form.lastName,
-        email: form.email,
-        phone: form.phone,
-        phone_verified: true,
-        gender: form.gender,
-        birth_year: parseInt(form.birthYear),
-        lan: form.lan,
+      // Create profile via server-route (kringgår RLS-begränsning före e-postbekräftelse)
+      const profileRes = await fetch("/api/auth/create-profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: authData.user.id,
+          username: form.username,
+          firstName: form.firstName,
+          lastName: form.lastName,
+          email: form.email,
+          phone: form.phone,
+          gender: form.gender,
+          birthYear: form.birthYear,
+          lan: form.lan,
+        }),
       });
-      if (profileError) throw new Error(profileError.message);
+      const profileData = await profileRes.json();
+      if (!profileRes.ok) throw new Error(profileData.error || "Kunde inte skapa profil.");
 
       setStep("done");
     } catch (e: unknown) {
