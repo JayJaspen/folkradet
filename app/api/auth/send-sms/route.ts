@@ -18,7 +18,9 @@ export async function POST(req: NextRequest) {
 
     const username = process.env.ELKS_API_USERNAME;
     const password = process.env.ELKS_API_PASSWORD;
-    const from = process.env.ELKS_FROM_NAME ?? "Folkradet";
+    // SMS-avsändarnamn får INTE innehålla å/ä/ö – strippa bort dem
+    const rawFrom = process.env.ELKS_FROM_NAME ?? "Folkradet";
+    const from = rawFrom.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Za-z0-9 ]/g, "").slice(0, 11);
 
     console.log("Username finns:", !!username);
     console.log("Password finns:", !!password);
@@ -50,12 +52,12 @@ export async function POST(req: NextRequest) {
     const supabase = await createAdminClient();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 minuter
 
+    // Radera gamla koder för numret, sedan insert ny
+    await supabase.from("sms_verifications").delete().eq("phone", formatted);
+
     const { error: dbError } = await supabase
       .from("sms_verifications")
-      .upsert(
-        { phone: formatted, code, expires_at: expiresAt, used: false },
-        { onConflict: "phone" }
-      );
+      .insert({ phone: formatted, code, expires_at: expiresAt, used: false });
 
     if (dbError) {
       console.error("Kunde inte spara verifieringskod:", dbError);
