@@ -50,8 +50,13 @@ export default function VeckansFragaPage() {
   }, []);
 
   useEffect(() => {
+    const now = new Date().toISOString();
     supabase.from("weekly_questions").select("*")
-      .eq("is_active", true).order("published_at", { ascending: false }).limit(1).single()
+      .eq("is_active", true)
+      .or(`publish_at.is.null,publish_at.lte.${now}`)
+      .or(`unpublish_at.is.null,unpublish_at.gt.${now}`)
+      .order("publish_at", { ascending: false })
+      .limit(1).single()
       .then(({ data }) => {
         if (data) {
           setQuestion(data);
