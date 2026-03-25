@@ -40,7 +40,10 @@ export default function ForslagPage() {
 
   return (
     <div className="grid grid-cols-[160px_1fr_160px] gap-4 items-start">
-      <div className="sticky top-4"><BannerAd position="left" /></div>
+      <div className="sticky top-4 flex flex-col gap-4">
+        <BannerAd position="left" />
+        <BannerAd position="left-2" />
+      </div>
 
       <div className="card max-w-2xl mx-auto w-full">
         <h1 className="text-xl font-bold text-primary mb-1">Förslag på frågor</h1>
@@ -91,7 +94,10 @@ export default function ForslagPage() {
         )}
       </div>
 
-      <div className="sticky top-4"><BannerAd position="right" /></div>
+      <div className="sticky top-4 flex flex-col gap-4">
+        <BannerAd position="right" />
+        <BannerAd position="right-2" />
+      </div>
     </div>
   );
 }

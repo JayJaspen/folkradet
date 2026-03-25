@@ -43,7 +43,10 @@ export default function MinSidaPage() {
 
   return (
     <div className="grid grid-cols-[160px_1fr_160px] gap-4 items-start">
-      <div className="sticky top-4"><BannerAd position="left" /></div>
+      <div className="sticky top-4 flex flex-col gap-4">
+        <BannerAd position="left" />
+        <BannerAd position="left-2" />
+      </div>
 
       <div className="max-w-lg mx-auto w-full space-y-4">
         {/* Profil-info */}
@@ -101,7 +104,10 @@ export default function MinSidaPage() {
         </div>
       </div>
 
-      <div className="sticky top-4"><BannerAd position="right" /></div>
+      <div className="sticky top-4 flex flex-col gap-4">
+        <BannerAd position="right" />
+        <BannerAd position="right-2" />
+      </div>
     </div>
   );
 }
