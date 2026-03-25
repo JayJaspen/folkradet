@@ -15,8 +15,8 @@ const config: Config = {
           dark: "#0e4a5c",
         },
         gold: {
-          DEFAULT: "#5aa860",
-          dark: "#3d8a43",
+          DEFAULT: "#f59e0b",
+          dark: "#d97706",
         },
         surface: "#f0f4f6",
       },
