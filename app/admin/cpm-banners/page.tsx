@@ -73,31 +73,28 @@ export default function AdminCPMBannersPage() {
     setError("");
   }
 
-  // Ladda upp bild till Supabase Storage
+  // Ladda upp bild via server-side API (service role kringgår Storage RLS)
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Lokal förhandsgranskning
     setPreview(URL.createObjectURL(file));
-
     setUploading(true);
     setError("");
-    const ext      = file.name.split(".").pop();
-    const filename = `banner-${Date.now()}.${ext}`;
 
-    const { data, error: uploadErr } = await supabase.storage
-      .from("banners")
-      .upload(filename, file, { upsert: true, contentType: file.type });
+    const fd = new FormData();
+    fd.append("file", file);
 
-    if (uploadErr) {
-      setError("Uppladdning misslyckades: " + uploadErr.message);
+    const res = await fetch("/api/admin/upload-banner", { method: "POST", body: fd });
+    const json = await res.json();
+
+    if (!res.ok) {
+      setError("Uppladdning misslyckades: " + (json.error ?? res.statusText));
       setUploading(false);
       return;
     }
 
-    const { data: urlData } = supabase.storage.from("banners").getPublicUrl(data.path);
-    setForm(f => ({ ...f, image_url: urlData.publicUrl, adsense_slot: "" }));
+    setForm(f => ({ ...f, image_url: json.url, adsense_slot: "" }));
     setUploading(false);
   }
 
