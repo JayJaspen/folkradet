@@ -11,12 +11,20 @@ interface Profile {
   answer_count?: number;
 }
 
+interface PasswordResetRequest {
+  id: string; email: string; created_at: string; status: string;
+}
+
 export default function AdminAnvandare() {
   const supabase = createClient();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [total, setTotal] = useState(0);
   const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Lösenordsåterställning
+  const [resetRequests, setResetRequests] = useState<PasswordResetRequest[]>([]);
+  const [resolvingId, setResolvingId] = useState<string | null>(null);
 
   const [searchText, setSearchText] = useState("");
   const [filterGender, setFilterGender] = useState("");
@@ -84,9 +92,71 @@ export default function AdminAnvandare() {
 
   function getAge(birthYear: number) { return new Date().getFullYear() - birthYear; }
 
+  // Hämta lösenordsåterställningsförfrågningar
+  useEffect(() => {
+    async function fetchResetRequests() {
+      const { data } = await supabase
+        .from("password_reset_requests")
+        .select("id, email, created_at, status")
+        .eq("status", "pending")
+        .order("created_at", { ascending: false });
+      setResetRequests((data as PasswordResetRequest[]) ?? []);
+    }
+    fetchResetRequests();
+  }, []);
+
+  async function resolveResetRequest(req: PasswordResetRequest) {
+    const adminId = (await supabase.auth.getUser()).data.user?.id;
+    if (!adminId) return;
+    setResolvingId(req.id);
+    await supabase
+      .from("password_reset_requests")
+      .update({ status: "resolved", resolved_at: new Date().toISOString(), resolved_by: adminId })
+      .eq("id", req.id);
+    setResetRequests(prev => prev.filter(r => r.id !== req.id));
+    setResolvingId(null);
+    alert(`Markerad som hanterad. Kom ihåg att manuellt byta lösenord i Supabase för ${req.email} och skicka det nya lösenordet via e-post.`);
+  }
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-primary">Användare</h1>
+
+      {/* Lösenordsåterställningsförfrågningar */}
+      {resetRequests.length > 0 && (
+        <div className="card border-l-4 border-l-amber-400">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-lg">🔑</span>
+            <h2 className="font-semibold text-gray-700">
+              Lösenordsåterställning
+              <span className="ml-2 bg-amber-100 text-amber-700 text-xs font-bold px-2 py-0.5 rounded-full">
+                {resetRequests.length} väntande
+              </span>
+            </h2>
+          </div>
+          <p className="text-xs text-gray-500 mb-3">
+            Dessa användare har begärt lösenordsåterställning. Gå till Supabase → Authentication → Users,
+            hitta användaren, sätt ett nytt tillfälligt lösenord och skicka det via e-post. Markera sedan som hanterad.
+          </p>
+          <div className="space-y-2">
+            {resetRequests.map(req => (
+              <div key={req.id} className="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
+                <div>
+                  <div className="font-medium text-sm">{req.email}</div>
+                  <div className="text-xs text-gray-500">Begärt: {formatDateTime(req.created_at)}</div>
+                </div>
+                <button
+                  onClick={() => resolveResetRequest(req)}
+                  disabled={resolvingId === req.id}
+                  className="text-xs px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+                >
+                  {resolvingId === req.id ? "..." : "Markera hanterad"}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Sök & filter */}
       <div className="card">

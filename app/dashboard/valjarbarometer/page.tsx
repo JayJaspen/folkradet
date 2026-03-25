@@ -29,29 +29,14 @@ export default function ValjarbarometerPage() {
   const [availableLan,     setAvailableLan]     = useState<string[]>([]);
   const [availableAges,    setAvailableAges]    = useState<string[]>([]);
 
-  // Hämta tillgängliga filtervärden
+  // Hämta tillgängliga filtervärden via SECURITY DEFINER-funktion (kringgår RLS)
   const fetchFilterOptions = useCallback(async () => {
-    const { data } = await supabase
-      .from("party_votes")
-      .select("profiles(gender, lan, birth_year)");
-    if (!data) return;
-    type P = { gender: string; lan: string; birth_year: number };
-    const profiles = (data as unknown as { profiles: P[] | P | null }[])
-      .flatMap(r => (Array.isArray(r.profiles) ? r.profiles : r.profiles ? [r.profiles] : []));
-    const curYear = new Date().getFullYear();
-    const ageSet  = new Set<string>();
-    profiles.forEach(p => {
-      const age = curYear - p.birth_year;
-      if (age <= 25) ageSet.add("18–25");
-      else if (age <= 35) ageSet.add("26–35");
-      else if (age <= 45) ageSet.add("36–45");
-      else if (age <= 55) ageSet.add("46–55");
-      else if (age <= 65) ageSet.add("56–65");
-      else ageSet.add("65+");
-    });
-    setAvailableGenders([...new Set(profiles.map(p => p.gender).filter(Boolean))]);
-    setAvailableLan([...new Set(profiles.map(p => p.lan).filter(Boolean))].sort());
-    setAvailableAges([...ageSet]);
+    const { data, error } = await supabase.rpc("get_party_filter_options");
+    if (error || !data) return;
+    const d = data as { genders: string[]; lans: string[]; age_groups: string[] };
+    setAvailableGenders(d.genders ?? []);
+    setAvailableLan(d.lans ?? []);
+    setAvailableAges(d.age_groups ?? []);
   }, []);
 
   useEffect(() => { fetchFilterOptions(); }, [fetchFilterOptions]);

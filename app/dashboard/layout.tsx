@@ -19,6 +19,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   useEffect(() => {
     const client = createClient();
+
+    // Kontrollera session-timeout (2h om "håll mig inloggad" inte är valt)
+    const mode = localStorage.getItem("session_mode");
+    const expiry = localStorage.getItem("session_expiry");
+    if (mode === "2h" && expiry && Date.now() > Number(expiry)) {
+      client.auth.signOut().then(() => {
+        localStorage.removeItem("session_mode");
+        localStorage.removeItem("session_expiry");
+        router.push("/login");
+      });
+      return;
+    }
+
     client.auth.getUser().then(({ data }) => {
       if (!data.user) { router.push("/login"); return; }
       client.from("profiles").select("username, is_suspended").eq("id", data.user.id).single()
@@ -35,6 +48,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   async function handleLogout() {
     const client = createClient();
     await client.auth.signOut();
+    localStorage.removeItem("session_mode");
+    localStorage.removeItem("session_expiry");
     router.push("/");
   }
 

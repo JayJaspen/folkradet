@@ -8,6 +8,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -31,6 +32,18 @@ export default function LoginPage() {
         await supabase.auth.signOut();
         setError("Ditt konto är tillfälligt avstängt. Kontakta oss på info@folkradet.se för mer information.");
         return;
+      }
+
+      // Spara session-inställning
+      if (rememberMe) {
+        // 30 dagar – lagra i localStorage så det överlever sidstängning
+        localStorage.setItem("session_mode", "30days");
+        localStorage.removeItem("session_expiry");
+      } else {
+        // 2 timmar – lagra utgångstid i localStorage
+        const expiry = Date.now() + 2 * 60 * 60 * 1000;
+        localStorage.setItem("session_mode", "2h");
+        localStorage.setItem("session_expiry", String(expiry));
       }
 
       if (profile?.is_admin) {
@@ -74,7 +87,12 @@ export default function LoginPage() {
             />
           </div>
           <div>
-            <label className="label">Lösenord</label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="label mb-0">Lösenord</label>
+              <Link href="/glomt-losenord" className="text-xs text-primary hover:underline">
+                Glömt lösenord?
+              </Link>
+            </div>
             <input
               className="input"
               type="password"
@@ -84,12 +102,29 @@ export default function LoginPage() {
               required
             />
           </div>
+
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={e => setRememberMe(e.target.checked)}
+              className="w-4 h-4 accent-primary"
+            />
+            <span className="text-sm text-gray-600">Håll mig inloggad i 30 dagar</span>
+          </label>
+
           <button type="submit" disabled={loading} className="btn-primary w-full">
             {loading ? "Loggar in..." : "Logga in"}
           </button>
         </form>
 
-        <p className="text-center text-sm text-gray-500 mt-6">
+        <p className="text-center text-xs text-gray-400 mt-3">
+          {rememberMe
+            ? "Du förblir inloggad i 30 dagar."
+            : "Du loggas ut automatiskt efter 2 timmar."}
+        </p>
+
+        <p className="text-center text-sm text-gray-500 mt-4">
           Inget konto?{" "}
           <Link href="/register" className="text-primary font-medium hover:underline">Registrera dig</Link>
         </p>
