@@ -111,6 +111,20 @@ export default function AdminAnvandare() {
     fetchResetRequests();
   }, []);
 
+  async function changePasswordByEmail(email: string, resolveRequestId: string) {
+    setPwError("");
+    const { data } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("email", email)
+      .single();
+    if (!data?.id) {
+      setPwError("Hittade ingen användare med den e-postadressen.");
+      return;
+    }
+    await changePassword(data.id, resolveRequestId);
+  }
+
   async function changePassword(userId: string, resolveRequestId?: string) {
     if (!newPassword || newPassword.length < 6) {
       setPwError("Lösenordet måste vara minst 6 tecken.");
@@ -160,8 +174,7 @@ export default function AdminAnvandare() {
             </h2>
           </div>
           <p className="text-xs text-gray-500 mb-3">
-            Dessa användare har begärt lösenordsåterställning. Gå till Supabase → Authentication → Users,
-            hitta användaren, sätt ett nytt tillfälligt lösenord och skicka det via e-post. Markera sedan som hanterad.
+            Dessa användare har begärt lösenordsåterställning. Klicka på "Byt lösenord", ange ett nytt lösenord och tryck Spara. Skicka sedan det nya lösenordet till användaren via e-post.
           </p>
           <div className="space-y-3">
             {resetRequests.map(req => (
@@ -191,11 +204,7 @@ export default function AdminAnvandare() {
                       onChange={e => setNewPassword(e.target.value)}
                     />
                     <button
-                      onClick={() => {
-                        const user = profiles.find(p => p.email === req.email);
-                        if (user) changePassword(user.id, req.id);
-                        else setPwError("Hittade inte användaren i listan — sök fram dem först.");
-                      }}
+                      onClick={() => changePasswordByEmail(req.email, req.id)}
                       disabled={resolvingId === `req_${req.id}`}
                       className="text-xs px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
                     >
