@@ -1,0 +1,28 @@
+{
+  "name": "Folkrådet",
+  "short_name": "Folkrådet",
+  "description": "En Röst För Folket – få din röst hörd, transparent och konfidentiellt",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0e4a5c",
+  "theme_color": "#0891b2",
+  "lang": "sv",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "categories": ["news", "politics", "social"]
+}
