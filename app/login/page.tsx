@@ -87,12 +87,7 @@ export default function LoginPage() {
             />
           </div>
           <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="label mb-0">Lösenord</label>
-              <Link href="/glomt-losenord" className="text-xs text-primary hover:underline">
-                Glömt lösenord?
-              </Link>
-            </div>
+            <label className="label">Lösenord</label>
             <input
               className="input"
               type="password"
@@ -101,6 +96,11 @@ export default function LoginPage() {
               placeholder="••••••••"
               required
             />
+            <div className="text-right mt-1">
+              <Link href="/glomt-losenord" className="text-xs text-primary hover:underline">
+                Glömt lösenord?
+              </Link>
+            </div>
           </div>
 
           <label className="flex items-center gap-2 cursor-pointer select-none">

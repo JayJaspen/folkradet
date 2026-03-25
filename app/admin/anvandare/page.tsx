@@ -26,6 +26,12 @@ export default function AdminAnvandare() {
   const [resetRequests, setResetRequests] = useState<PasswordResetRequest[]>([]);
   const [resolvingId, setResolvingId] = useState<string | null>(null);
 
+  // Lösenordsbyte per användare
+  const [changingPasswordFor, setChangingPasswordFor] = useState<string | null>(null); // userId
+  const [newPassword, setNewPassword] = useState("");
+  const [pwError, setPwError] = useState("");
+  const [pwSuccess, setPwSuccess] = useState("");
+
   const [searchText, setSearchText] = useState("");
   const [filterGender, setFilterGender] = useState("");
   const [filterAge, setFilterAge] = useState("");
@@ -105,17 +111,36 @@ export default function AdminAnvandare() {
     fetchResetRequests();
   }, []);
 
-  async function resolveResetRequest(req: PasswordResetRequest) {
-    const adminId = (await supabase.auth.getUser()).data.user?.id;
-    if (!adminId) return;
-    setResolvingId(req.id);
-    await supabase
-      .from("password_reset_requests")
-      .update({ status: "resolved", resolved_at: new Date().toISOString(), resolved_by: adminId })
-      .eq("id", req.id);
-    setResetRequests(prev => prev.filter(r => r.id !== req.id));
-    setResolvingId(null);
-    alert(`Markerad som hanterad. Kom ihåg att manuellt byta lösenord i Supabase för ${req.email} och skicka det nya lösenordet via e-post.`);
+  async function changePassword(userId: string, resolveRequestId?: string) {
+    if (!newPassword || newPassword.length < 6) {
+      setPwError("Lösenordet måste vara minst 6 tecken.");
+      return;
+    }
+    setPwError("");
+    setPwSuccess("");
+    setResolvingId(userId);
+    try {
+      const res = await fetch("/api/admin/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, newPassword, resolveRequestId }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error);
+      setPwSuccess("Lösenordet är bytt!");
+      setNewPassword("");
+      if (resolveRequestId) {
+        setResetRequests(prev => prev.filter(r => r.id !== resolveRequestId));
+      }
+      setTimeout(() => {
+        setChangingPasswordFor(null);
+        setPwSuccess("");
+      }, 2000);
+    } catch (err: unknown) {
+      setPwError(err instanceof Error ? err.message : "Något gick fel.");
+    } finally {
+      setResolvingId(null);
+    }
   }
 
   return (
@@ -138,20 +163,49 @@ export default function AdminAnvandare() {
             Dessa användare har begärt lösenordsåterställning. Gå till Supabase → Authentication → Users,
             hitta användaren, sätt ett nytt tillfälligt lösenord och skicka det via e-post. Markera sedan som hanterad.
           </p>
-          <div className="space-y-2">
+          <div className="space-y-3">
             {resetRequests.map(req => (
-              <div key={req.id} className="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
-                <div>
-                  <div className="font-medium text-sm">{req.email}</div>
-                  <div className="text-xs text-gray-500">Begärt: {formatDateTime(req.created_at)}</div>
+              <div key={req.id} className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
+                <div className="flex items-center justify-between mb-2">
+                  <div>
+                    <div className="font-medium text-sm">{req.email}</div>
+                    <div className="text-xs text-gray-500">Begärt: {formatDateTime(req.created_at)}</div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setChangingPasswordFor(`req_${req.id}`);
+                      setNewPassword(""); setPwError(""); setPwSuccess("");
+                    }}
+                    className="text-xs px-3 py-1.5 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors font-medium"
+                  >
+                    🔑 Byt lösenord
+                  </button>
                 </div>
-                <button
-                  onClick={() => resolveResetRequest(req)}
-                  disabled={resolvingId === req.id}
-                  className="text-xs px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
-                >
-                  {resolvingId === req.id ? "..." : "Markera hanterad"}
-                </button>
+                {changingPasswordFor === `req_${req.id}` && (
+                  <div className="mt-2 flex gap-2 items-center flex-wrap">
+                    <input
+                      className="input text-sm flex-1 min-w-[160px]"
+                      type="text"
+                      placeholder="Nytt lösenord (min 6 tecken)"
+                      value={newPassword}
+                      onChange={e => setNewPassword(e.target.value)}
+                    />
+                    <button
+                      onClick={() => {
+                        const user = profiles.find(p => p.email === req.email);
+                        if (user) changePassword(user.id, req.id);
+                        else setPwError("Hittade inte användaren i listan — sök fram dem först.");
+                      }}
+                      disabled={resolvingId === `req_${req.id}`}
+                      className="text-xs px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
+                    >
+                      {resolvingId === `req_${req.id}` ? "Sparar..." : "Spara"}
+                    </button>
+                    <button onClick={() => setChangingPasswordFor(null)} className="text-xs text-gray-400 hover:text-gray-600">Avbryt</button>
+                    {pwError && changingPasswordFor === `req_${req.id}` && <p className="text-xs text-red-600 w-full">{pwError}</p>}
+                    {pwSuccess && changingPasswordFor === `req_${req.id}` && <p className="text-xs text-green-600 w-full">{pwSuccess}</p>}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -219,7 +273,7 @@ export default function AdminAnvandare() {
                     <th className="text-left py-2 pr-4">Profil</th>
                     <th className="text-left py-2 pr-4">Aktivitet</th>
                     <th className="text-left py-2 pr-4">Status</th>
-                    <th className="text-left py-2">Åtgärd</th>
+                    <th className="text-left py-2">Åtgärder</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -249,13 +303,46 @@ export default function AdminAnvandare() {
                           {p.is_suspended ? "Avstängd" : "Aktiv"}
                         </span>
                       </td>
-                      <td className="py-3">
+                      <td className="py-3 space-y-1">
                         {!p.is_admin && (
                           <button
                             onClick={() => toggleSuspend(p)}
-                            className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors ${p.is_suspended ? "border-green-200 text-green-700 hover:bg-green-50" : "border-red-200 text-red-600 hover:bg-red-50"}`}>
+                            className={`block text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors ${p.is_suspended ? "border-green-200 text-green-700 hover:bg-green-50" : "border-red-200 text-red-600 hover:bg-red-50"}`}>
                             {p.is_suspended ? "Återaktivera" : "Stäng av"}
                           </button>
+                        )}
+                        <button
+                          onClick={() => {
+                            setChangingPasswordFor(p.id);
+                            setNewPassword(""); setPwError(""); setPwSuccess("");
+                          }}
+                          className="block text-xs px-3 py-1.5 rounded-lg border border-primary/30 text-primary hover:bg-primary/5 font-medium transition-colors"
+                        >
+                          🔑 Byt lösenord
+                        </button>
+                        {changingPasswordFor === p.id && (
+                          <div className="mt-1 space-y-1">
+                            <input
+                              className="input text-xs w-40"
+                              type="text"
+                              placeholder="Nytt lösenord"
+                              value={newPassword}
+                              onChange={e => setNewPassword(e.target.value)}
+                              onKeyDown={e => e.key === "Enter" && changePassword(p.id)}
+                            />
+                            <div className="flex gap-1">
+                              <button
+                                onClick={() => changePassword(p.id)}
+                                disabled={resolvingId === p.id}
+                                className="text-xs px-2 py-1 bg-green-600 text-white rounded font-medium"
+                              >
+                                {resolvingId === p.id ? "..." : "Spara"}
+                              </button>
+                              <button onClick={() => setChangingPasswordFor(null)} className="text-xs text-gray-400">Avbryt</button>
+                            </div>
+                            {pwError && changingPasswordFor === p.id && <p className="text-xs text-red-600">{pwError}</p>}
+                            {pwSuccess && changingPasswordFor === p.id && <p className="text-xs text-green-600">{pwSuccess}</p>}
+                          </div>
                         )}
                       </td>
                     </tr>
