@@ -14,6 +14,25 @@ export async function POST(req: NextRequest) {
     if (!phone) return NextResponse.json({ error: "Mobilnummer krävs." }, { status: 400 });
 
     const formatted = formatPhone(phone);
+
+    // Rate limiting: max 1 SMS per telefonnummer var 60:e sekund
+    const supabase = await createAdminClient();
+    const cooldownCutoff = new Date(Date.now() - 60 * 1000).toISOString();
+    const { data: recentCode } = await supabase
+      .from("sms_verifications")
+      .select("created_at")
+      .eq("phone", formatted)
+      .gt("created_at", cooldownCutoff)
+      .limit(1)
+      .maybeSingle();
+
+    if (recentCode) {
+      return NextResponse.json(
+        { error: "Vänta 60 sekunder innan du begär en ny kod." },
+        { status: 429 }
+      );
+    }
+
     const code = Math.floor(100000 + Math.random() * 900000).toString();
 
     const username = process.env.ELKS_API_USERNAME;
@@ -21,10 +40,6 @@ export async function POST(req: NextRequest) {
     // SMS-avsändarnamn får INTE innehålla å/ä/ö – strippa bort dem
     const rawFrom = process.env.ELKS_FROM_NAME ?? "Folkradet";
     const from = rawFrom.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Za-z0-9 ]/g, "").slice(0, 11);
-
-    console.log("Username finns:", !!username);
-    console.log("Password finns:", !!password);
-    console.log("Skickar till:", formatted);
 
     const formData = new URLSearchParams({
       from,
@@ -49,7 +64,6 @@ export async function POST(req: NextRequest) {
     }
 
     // Spara koden i databasen så att verify-sms kan validera den
-    const supabase = await createAdminClient();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 minuter
 
     // Radera gamla koder för numret, sedan insert ny

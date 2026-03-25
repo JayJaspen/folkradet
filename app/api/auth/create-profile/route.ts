@@ -12,6 +12,30 @@ export async function POST(req: NextRequest) {
 
     const supabase = await createAdminClient();
 
+    // Kontrollera att telefonnumret faktiskt är verifierat via SMS (within the last 15 minutes)
+    const formatted = phone.replace(/\s/g, "").startsWith("0")
+      ? "+46" + phone.replace(/\s/g, "").slice(1)
+      : phone.replace(/\s/g, "").startsWith("+")
+      ? phone.replace(/\s/g, "")
+      : "+" + phone.replace(/\s/g, "");
+
+    const verifiedCutoff = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+    const { data: verifiedRecord } = await supabase
+      .from("sms_verifications")
+      .select("id")
+      .eq("phone", formatted)
+      .eq("used", true)
+      .gt("updated_at", verifiedCutoff)
+      .limit(1)
+      .maybeSingle();
+
+    if (!verifiedRecord) {
+      return NextResponse.json(
+        { error: "Telefonnumret är inte verifierat. Verifiera med SMS-kod först." },
+        { status: 403 }
+      );
+    }
+
     const { error } = await supabase.from("profiles").insert({
       id: userId,
       username,
