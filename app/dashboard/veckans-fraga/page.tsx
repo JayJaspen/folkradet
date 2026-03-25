@@ -277,31 +277,44 @@ export default function VeckansFragaPage() {
       <div className="card">
         <h2 className="font-bold text-gray-800 mb-1">Partiomröstning</h2>
         <p className="text-xs text-gray-500 mb-1">Vilket parti skulle du rösta på om det var val idag?</p>
-        <div className="bg-blue-50 border border-blue-100 text-blue-700 text-xs px-3 py-2 rounded-lg mb-3">
-          ℹ️ Din röst gäller i <strong>30 dagar</strong>. Uppdatera den dagligen för att hålla den aktiv — annars räknas den inte med i statistiken.
-        </div>
-
-        {/* Visa nuvarande röst och utgångsdatum */}
-        {myPartyVote && (() => {
+        {/* Statusruta – visar rätt meddelande beroende på röstläge */}
+        {(() => {
+          if (!myPartyVote) {
+            return (
+              <div className="bg-blue-50 border border-blue-100 text-blue-700 text-xs px-3 py-2 rounded-lg mb-3">
+                ℹ️ Din röst räknas i <strong>30 dagar</strong> — uppdatera den dagligen för att hålla den aktiv.
+              </div>
+            );
+          }
           const expiresAt = new Date(myPartyVote.voted_at);
           expiresAt.setDate(expiresAt.getDate() + 30);
           const daysLeft = Math.ceil((expiresAt.getTime() - Date.now()) / 86400000);
           const expireStr = expiresAt.toLocaleDateString("sv-SE", { day: "numeric", month: "long" });
+          const isExpired = daysLeft <= 0;
+          const isWarning = !isExpired && daysLeft <= 3;
+
+          let boxClass = "bg-gray-50 border-gray-200 text-gray-600";
+          if (hasVotedPartyToday) boxClass = "bg-green-50 border-green-200 text-green-700";
+          else if (isExpired)     boxClass = "bg-red-50 border-red-200 text-red-700";
+          else if (isWarning)     boxClass = "bg-amber-50 border-amber-200 text-amber-700";
+
           return (
-            <div className={`text-xs px-3 py-2 rounded-lg mb-3 flex items-center gap-2 ${daysLeft <= 3 ? "bg-amber-50 border border-amber-200 text-amber-700" : "bg-gray-50 border border-gray-200 text-gray-600"}`}>
+            <div className={`text-xs px-3 py-2 rounded-lg mb-3 border flex items-center gap-2 ${boxClass}`}>
               <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: PARTIES[myPartyVote.party] ?? "#ccc" }} />
               <span>
-                Din röst: <strong>{myPartyVote.party}</strong> ·{" "}
-                {daysLeft > 0
-                  ? <>{daysLeft <= 3 && "⚠️ "}Gäller t.o.m. {expireStr} ({daysLeft} dag{daysLeft !== 1 ? "ar" : ""} kvar)</>
-                  : <span className="text-red-600 font-medium">Rösten har gått ut — rösta igen!</span>
-                }
+                {hasVotedPartyToday ? (
+                  <>✅ <strong>{myPartyVote.party}</strong> · Uppdaterad idag · Gäller t.o.m. {expireStr}</>
+                ) : isExpired ? (
+                  <>Din röst på <strong>{myPartyVote.party}</strong> har gått ut — rösta igen för att räknas med!</>
+                ) : (
+                  <>{isWarning && "⚠️ "}Din röst: <strong>{myPartyVote.party}</strong> · Gäller t.o.m. {expireStr} · Uppdatera dagligen</>
+                )}
               </span>
             </div>
           );
         })()}
 
-        {!hasVotedPartyToday ? (
+        {!hasVotedPartyToday && (
           <div className="space-y-1.5">
             {PARTY_LIST.map(party => (
               <button key={party} onClick={() => setSelectedParty(party)}
@@ -313,10 +326,6 @@ export default function VeckansFragaPage() {
             <button onClick={submitPartyVote} disabled={!selectedParty || submittingParty} className="btn-primary w-full mt-2 text-sm">
               {submittingParty ? "Röstar..." : myPartyVote ? "Uppdatera röst" : "Rösta"}
             </button>
-          </div>
-        ) : (
-          <div className="bg-green-50 border border-green-200 text-green-700 text-xs px-3 py-2 rounded-lg mb-3">
-            ✅ Du har röstat idag. Kom tillbaka imorgon för att uppdatera din röst!
           </div>
         )}
         <div className="mt-4 pt-4 border-t border-gray-100">
