@@ -33,6 +33,7 @@ export default function LoginPage() {
       }
 
       if (authError) throw new Error(authError.message);
+      if (!data.user) throw new Error("Inloggning misslyckades.");
 
       // Check if suspended
       const { data: profile } = await supabase
