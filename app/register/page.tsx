@@ -174,7 +174,7 @@ export default function RegisterPage() {
             </div>
             <div>
               <label className="label">Mobilnummer <span className="text-gray-400 text-xs">(för SMS-verifiering)</span></label>
-              <input className="input" type="tel" name="phone" value={form.phone} onChange={handleChange} placeholder="+46701234567" />
+              <input className="input" type="tel" name="phone" value={form.phone} onChange={handleChange} placeholder="0701234567" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
