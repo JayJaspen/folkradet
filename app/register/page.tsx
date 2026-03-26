@@ -120,7 +120,7 @@ export default function RegisterPage() {
         <div className="card max-w-md w-full text-center">
           <div className="text-5xl mb-4">✅</div>
           <h2 className="text-2xl font-bold text-primary mb-2">Välkommen!</h2>
-          <p className="text-gray-600 mb-6">Ditt konto har skapats. Kontrollera din e-post för att bekräfta din adress, sedan kan du logga in.</p>
+          <p className="text-gray-600 mb-6">Ditt konto har skapats och du kan nu logga in direkt.</p>
           <Link href="/login" className="btn-primary inline-block">Gå till inloggning</Link>
         </div>
       </div>
