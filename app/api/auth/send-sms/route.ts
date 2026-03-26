@@ -41,6 +41,11 @@ export async function POST(req: NextRequest) {
 
     const username = process.env.ELKS_API_USERNAME;
     const password = process.env.ELKS_API_PASSWORD;
+
+    if (!username || !password) {
+      console.error("46elks-credentials saknas i miljövariabler");
+      return NextResponse.json({ error: "SMS-tjänsten är inte konfigurerad. Kontakta admin." }, { status: 500 });
+    }
     // SMS-avsändarnamn får INTE innehålla å/ä/ö – strippa bort dem
     const rawFrom = process.env.ELKS_FROM_NAME ?? "Folkradet";
     const from = rawFrom.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Za-z0-9 ]/g, "").slice(0, 11);
@@ -64,7 +69,10 @@ export async function POST(req: NextRequest) {
     console.log("46elks svar:", elksRes.status, elksText);
 
     if (!elksRes.ok) {
-      return NextResponse.json({ error: "Kunde inte skicka SMS. Försök igen." }, { status: 500 });
+      console.error("46elks fel:", elksRes.status, elksText);
+      return NextResponse.json({
+        error: `SMS-fel (${elksRes.status}): ${elksText}`,
+      }, { status: 500 });
     }
 
     // Spara koden i databasen så att verify-sms kan validera den
