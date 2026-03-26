@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/server";
+import { createClient } from "@supabase/supabase-js";
 
 function formatPhone(phone: string): string {
   const cleaned = phone.replace(/\s/g, "");
@@ -14,7 +14,11 @@ export async function POST(req: NextRequest) {
     if (!phone || !code) return NextResponse.json({ error: "Telefonnummer och kod krävs." }, { status: 400 });
 
     const formatted = formatPhone(phone);
-    const supabase = await createAdminClient();
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    );
 
     const { data } = await supabase
       .from("sms_verifications")

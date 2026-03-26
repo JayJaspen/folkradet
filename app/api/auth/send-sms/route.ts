@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/server";
+import { createClient } from "@supabase/supabase-js";
 
 function formatPhone(phone: string): string {
   const cleaned = phone.replace(/\s/g, "");
@@ -16,7 +16,11 @@ export async function POST(req: NextRequest) {
     const formatted = formatPhone(phone);
 
     // Rate limiting: max 1 SMS per telefonnummer var 60:e sekund
-    const supabase = await createAdminClient();
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    );
     const cooldownCutoff = new Date(Date.now() - 60 * 1000).toISOString();
     const { data: recentCode } = await supabase
       .from("sms_verifications")
