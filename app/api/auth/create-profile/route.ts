@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
       .select("id")
       .eq("phone", formatted)
       .eq("used", true)
-      .gt("updated_at", verifiedCutoff)
+      .gt("created_at", verifiedCutoff)
       .limit(1)
       .maybeSingle();
 
