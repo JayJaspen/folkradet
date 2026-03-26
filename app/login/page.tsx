@@ -18,7 +18,20 @@ export default function LoginPage() {
     setError("");
     try {
       const supabase = createClient();
-      const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
+      let { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
+
+      // Om e-posten inte är bekräftad, bekräfta automatiskt och försök igen
+      if (authError && authError.message.toLowerCase().includes("email not confirmed")) {
+        await fetch("/api/auth/confirm-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        });
+        const retry = await supabase.auth.signInWithPassword({ email, password });
+        data = retry.data;
+        authError = retry.error;
+      }
+
       if (authError) throw new Error(authError.message);
 
       // Check if suspended
