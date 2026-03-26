@@ -2,7 +2,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import { LAN, GENDER_OPTIONS } from "@/lib/constants";
 import { getCurrentYear } from "@/lib/utils";
 
@@ -88,33 +87,24 @@ export default function RegisterPage() {
       const verifyData = await verifyRes.json();
       if (!verifyRes.ok) throw new Error(verifyData.error || "Felaktig kod.");
 
-      // Create Supabase auth user
-      const supabase = createClient();
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: form.email,
-        password: form.password,
-      });
-      if (authError) throw new Error(authError.message);
-      if (!authData.user) throw new Error("Registrering misslyckades.");
-
-      // Create profile via server-route (kringgår RLS-begränsning före e-postbekräftelse)
-      const profileRes = await fetch("/api/auth/create-profile", {
+      // Skapa konto (auth-användare + profil) via server-route
+      const registerRes = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId: authData.user.id,
+          email: form.email,
+          password: form.password,
+          phone: form.phone,
           username: form.username,
           firstName: form.firstName,
           lastName: form.lastName,
-          email: form.email,
-          phone: form.phone,
           gender: form.gender,
           birthYear: form.birthYear,
           lan: form.lan,
         }),
       });
-      const profileData = await profileRes.json();
-      if (!profileRes.ok) throw new Error(profileData.error || "Kunde inte skapa profil.");
+      const registerData = await registerRes.json();
+      if (!registerRes.ok) throw new Error(registerData.error || "Kunde inte skapa konto.");
 
       setStep("done");
     } catch (e: unknown) {
